@@ -1,7 +1,7 @@
 import { getGamesByCategory } from '@/lib/gameQueries'
 
 export default async function Page({ params, searchParams }) {
-  const page = parseInt(searchParams.page) || 1;
+  const page = await parseInt(searchParams.page) || 1;
   const { games, totalPages, currentPage } = await getGamesByCategory(params.slug, page);
 
   return(

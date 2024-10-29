@@ -27,13 +27,13 @@ export default async function Page({ params }) {
             <span className="text-gray-500 mx-2">/</span>
           </li>
           <li>
-            <a href={game.categories[0]?.title}>{game.categories[0]?.title}</a>
+            <a href={game?.categories[0]?.title}>{game?.categories[0]?.title}</a>
           </li>
           <li>
             <span className="text-gray-500 mx-2">/</span>
           </li>
           <li>
-            <span className="text-gray-500">{game.title}</span>
+            <span className="text-gray-500">{game?.title}</span>
           </li>
         </ol>
       </nav>
@@ -43,9 +43,9 @@ export default async function Page({ params }) {
       <div className="mt-8">
         <Suspense fallback={<p>Loading game...</p>}>
           <Disqus
-            url={`${process.env.NEXT_WEBSITE_URL}/game/${game.slug}`}
-            identifier={game.id}
-            title={game.title}
+            url={`${process.env.NEXT_WEBSITE_URL}/game/${game?.slug}`}
+            identifier={game?.id}
+            title={game?.title}
           />
         </Suspense>
       </div>
