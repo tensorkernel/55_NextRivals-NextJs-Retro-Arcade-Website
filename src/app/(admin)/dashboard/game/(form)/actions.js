@@ -24,25 +24,34 @@ export async function createGame(prevState, formData) {
       categories: {
         connect: { id: parseInt(categoryId, 10) },
       },
-      published
+      published,
     };
 
-    if (thumbnailFile && thumbnailFile instanceof File && thumbnailFile.name && thumbnailFile.size > 0) {
-      console.log("Setting image to:" , thumbnailFile.name);
-      gameData.image = thumbnailFile.name
+    if (
+      thumbnailFile &&
+      thumbnailFile instanceof File &&
+      thumbnailFile.name &&
+      thumbnailFile.size > 0
+    ) {
+      console.log("Setting image to:", thumbnailFile.name);
+      gameData.image = thumbnailFile.name;
     }
 
-    if (gameFile && gameFile instanceof File && gameFile.name && gameFile.size > 0) {
-      console.log("Setting file to:" , gameFile.name);
-      gameData.game_url = gameFile.name
+    if (
+      gameFile &&
+      gameFile instanceof File &&
+      gameFile.name &&
+      gameFile.size > 0
+    ) {
+      console.log("Setting file to:", gameFile.name);
+      gameData.game_url = gameFile.name;
     }
-
 
     if (id) {
       // update the game
       await prisma.game.update({
         where: { id: parseInt(id, 10) },
-        data: gameData
+        data: gameData,
       });
 
       await uploadThumbnail(thumbnailFile);
@@ -54,7 +63,6 @@ export async function createGame(prevState, formData) {
         message: "Game has been updated.",
         color: "green",
       };
-
     } else {
       // Check if slug already exist
       const existingGame = await prisma.game.findFirst({
@@ -85,12 +93,6 @@ export async function createGame(prevState, formData) {
         color: "green",
       };
     }
-
-    return {
-      status: "success",
-      message: "Game has been added.",
-      color: "green",
-    };
   } catch (error) {
     revalidatePath("/");
     return {
@@ -101,12 +103,16 @@ export async function createGame(prevState, formData) {
   }
 }
 
-
 async function uploadGame(gameFile) {
-  if (gameFile && gameFile instanceof File && gameFile.name && gameFile.size > 0) {
+  if (
+    gameFile &&
+    gameFile instanceof File &&
+    gameFile.name &&
+    gameFile.size > 0
+  ) {
     try {
       const buffer = Buffer.from(await gameFile.arrayBuffer());
-      await uploadFileToS3(buffer, `rom/${gameFile.name}`)
+      await uploadFileToS3(buffer, `rom/${gameFile.name}`);
     } catch (error) {
       console.log("Error uploading game:", error);
     }
@@ -114,36 +120,43 @@ async function uploadGame(gameFile) {
 }
 
 async function uploadThumbnail(thumbnailFile) {
-  if (thumbnailFile && thumbnailFile instanceof File && thumbnailFile.name && thumbnailFile.size > 0) {
+  if (
+    thumbnailFile &&
+    thumbnailFile instanceof File &&
+    thumbnailFile.name &&
+    thumbnailFile.size > 0
+  ) {
     try {
       const buffer = Buffer.from(await thumbnailFile.arrayBuffer());
-      await uploadFileToS3(buffer, `thumbnail/${thumbnailFile.name}`)
+      await uploadFileToS3(buffer, `thumbnail/${thumbnailFile.name}`);
     } catch (error) {
       console.log("Error uploading thumbnail:", error);
     }
   }
 }
 
+// Cloudflare R2 configuration instead of AWS S3
 const s3Client = new S3Client({
-  region: process.env.NEXT_AWS_S3_REGION,
+  region: "auto",
+  endpoint: `https://${process.env.NEXT_R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
   credentials: {
-    accessKeyId: process.env.NEXT_AWS_S3_KEY_ID,
-    secretAccessKey: process.env.NEXT_AWS_S3_SECRET_ACCESS_KEY
-  }
-})
+    accessKeyId: process.env.NEXT_R2_ACCESS_KEY_ID,
+    secretAccessKey: process.env.NEXT_R2_SECRET_ACCESS_KEY,
+  },
+});
 
 async function uploadFileToS3(file, filename) {
   const params = {
-    Bucket: process.env.NEXT_AWS_S3_BUCKET_NAME,
+    Bucket: process.env.NEXT_R2_BUCKET_NAME,
     Key: `${filename}`,
-    Body: file
-  }
+    Body: file,
+  };
 
   const command = new PutObjectCommand(params);
   try {
     const response = await s3Client.send(command);
     console.log("File uploaded successfully:", response);
-    return filename
+    return filename;
   } catch (error) {
     throw error;
   }
@@ -151,18 +164,18 @@ async function uploadFileToS3(file, filename) {
 
 export async function deleteFormAction(formData) {
   // delete logic here
-  if(!formData) {
+  if (!formData) {
     throw new Error("No form data received.");
   }
 
   const id = formData.get("gameId");
-  if(!id) {
+  if (!id) {
     throw new Error("Game ID is missing.");
   }
 
   await prisma.game.delete({
-    where: { id: parseInt(id, 10) }
-  })
+    where: { id: parseInt(id, 10) },
+  });
 
   redirect("/dashboard");
 }
